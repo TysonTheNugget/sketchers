@@ -4,23 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mymillios</title>
-  <!-- Google Pixel Font -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/xp.css">
 </head>
 <body>
   <div id="background-container"></div>
   <div class="main-container">
-    <h1 id="site-title">M y m i l l i o s</h1>
+    <h1 id="site-title">My<span>m</span>illios</h1>
     <div class="window">
-      <div class="title-bar">mymillio generatoor</div>
+      <div class="title-bar">Wishy Washy Combo</div>
       <div class="window-body">
         <div id="combo-container">
           {% for layer in layers %}
             <img id="layer-{{layer}}" src="" alt="" />
           {% endfor %}
         </div>
-        <button id="randomize-btn">Randomize!</button>
+        <div class="buttons">
+          <button id="randomize-btn">Randomize!</button>
+          <button id="download-btn">Download Layers</button>
+        </div>
       </div>
     </div>
   </div>
@@ -32,7 +34,7 @@
     // Floating background
     function spawnBackground() {
       const bg = document.getElementById('background-container');
-      const count = 15;
+      const count = 20;
       for(let i=0; i<count; i++){
         const layer = layers[Math.floor(Math.random()*layers.length)];
         const opts = layerFiles[layer];
@@ -43,11 +45,12 @@
         img.className = 'bg-float';
         img.style.top  = Math.random()*100 + '%';
         img.style.left = Math.random()*100 + '%';
-        img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random()*0.15}) rotate(${Math.random()*360}deg)`;
+        img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random()*0.2}) rotate(${Math.random()*360}deg)`;
         bg.appendChild(img);
       }
     }
 
+    // Randomize combo images
     function randomizeCombo(){
       layers.forEach(layer=>{
         const opts = layerFiles[layer]||[];
@@ -57,10 +60,25 @@
       });
     }
 
+    // Download each layer image separately
+    function downloadLayers(){
+      layers.forEach(layer=>{
+        const imgEl = document.getElementById(`layer-${layer}`);
+        const url = imgEl.src;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = url.split('/').pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', ()=>{
       spawnBackground();
       randomizeCombo();
       document.getElementById('randomize-btn').onclick = randomizeCombo;
+      document.getElementById('download-btn').onclick   = downloadLayers;
     });
   </script>
 </body>

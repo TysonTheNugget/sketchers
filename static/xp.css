@@ -1,22 +1,20 @@
-/* XP Style & Responsive Layout */
-
 html, body {
   margin:0; padding:0;
   width:100%; height:100%;
-  background:#004C4C;
+  background:#003F3F;
   font-family:'Press Start 2P', cursive;
   overflow:hidden;
 }
 
 #background-container {
   position:absolute;
-  top:0; left:0; right:0; bottom:0;
+  inset:0;
   z-index:1;
 }
 
 .bg-float {
   position:absolute;
-  opacity:0.2;
+  opacity:0.15;
   pointer-events:none;
 }
 
@@ -30,9 +28,9 @@ html, body {
 }
 
 #site-title {
-  font-size:24px;
+  font-size:clamp(16px,5vw,32px);
   margin-bottom:10px;
-  color: #ff0000;
+  color: #ff0055;
   text-shadow: 2px 2px #000;
 }
 
@@ -40,22 +38,21 @@ html, body {
   background:#C0C0C0;
   border:2px solid #000080;
   box-shadow:3px 3px 0 #000;
-  width:90vw;
-  max-width:400px;
+  width:clamp(300px,80vw,500px);
 }
 
 .title-bar {
   background:#000080;
   color:#fff;
-  padding:6px;
-  font-size:14px;
+  padding:8px;
+  font-size:16px;
   text-align:center;
 }
 
 .window-body {
   background:#E0E0E0;
   border:2px inset #808080;
-  padding:10px;
+  padding:12px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -63,8 +60,8 @@ html, body {
 
 #combo-container {
   position:relative;
-  width:200px;
-  height:200px;
+  width:clamp(200px,60vw,400px);
+  aspect-ratio:1;
   margin-bottom:10px;
   border:1px solid #000080;
   overflow:hidden;
@@ -73,9 +70,14 @@ html, body {
 #combo-container img {
   position:absolute;
   top:0; left:0;
-  width:200px;
-  height:200px;
+  width:100%;
+  height:100%;
   user-select:none;
+}
+
+.buttons {
+  display:flex;
+  gap:8px;
 }
 
 button {

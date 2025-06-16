@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 
 app = Flask(__name__)
 
@@ -24,10 +24,13 @@ def index():
     return render_template(
         'index.html',
         layers=LAYER_ORDER,
-        layer_files=layer_files,
-        img_width=IMAGE_SIZE[0],
-        img_height=IMAGE_SIZE[1]
+        layer_files=layer_files
     )
 
+# serve static files
+@app.route('/static/<path:path>')
+def static_proxy(path):
+    return send_from_directory('static', path)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
