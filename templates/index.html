@@ -2,52 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Random Combo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mymillios</title>
+  <!-- Google Pixel Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/xp.css">
-  <style>
-    #combo-container {
-      position: relative;
-      width: {{ img_width }}px;
-      height: {{ img_height }}px;
-      margin-bottom: 10px;
-    }
-    #combo-container img {
-      position: absolute;
-      top: 0; left: 0;
-      width: {{ img_width }}px;
-      height: {{ img_height }}px;
-      user-select: none;
-      pointer-events: none;
-    }
-  </style>
 </head>
 <body>
-  <button id="randomize-btn">Randomize!</button>
-  <div id="combo-container">
-    {% for layer in layers %}
-      <img id="layer-{{layer}}" src="" style="z-index:{{loop.index}}">
-    {% endfor %}
+  <div id="background-container"></div>
+  <div class="main-container">
+    <h1 id="site-title">M y m i l l i o s</h1>
+    <div class="window">
+      <div class="title-bar">Wishy Washy Combo</div>
+      <div class="window-body">
+        <div id="combo-container">
+          {% for layer in layers %}
+            <img id="layer-{{layer}}" src="" alt="" />
+          {% endfor %}
+        </div>
+        <button id="randomize-btn">Randomize!</button>
+      </div>
+    </div>
   </div>
 
   <script>
     const layerFiles = {{ layer_files | tojson }};
     const layers     = {{ layers | tojson }};
 
+    // Floating background
+    function spawnBackground() {
+      const bg = document.getElementById('background-container');
+      const count = 15;
+      for(let i=0; i<count; i++){
+        const layer = layers[Math.floor(Math.random()*layers.length)];
+        const opts = layerFiles[layer];
+        if(!opts || !opts.length) continue;
+        const pick = opts[Math.floor(Math.random()*opts.length)];
+        const img = document.createElement('img');
+        img.src = `/static/${layer}/${pick}`;
+        img.className = 'bg-float';
+        img.style.top  = Math.random()*100 + '%';
+        img.style.left = Math.random()*100 + '%';
+        img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random()*0.15}) rotate(${Math.random()*360}deg)`;
+        bg.appendChild(img);
+      }
+    }
+
     function randomizeCombo(){
-      layers.forEach(layerName=>{
-        const opts = layerFiles[layerName]||[];
+      layers.forEach(layer=>{
+        const opts = layerFiles[layer]||[];
         if(!opts.length) return;
-        const choice = opts[Math.floor(Math.random()*opts.length)];
-        document.getElementById(`layer-${layerName}`)
-                .src = `/static/${layerName}/${choice}`;
+        const pick = opts[Math.floor(Math.random()*opts.length)];
+        document.getElementById(`layer-${layer}`).src = `/static/${layer}/${pick}`;
       });
     }
 
-    document.getElementById('randomize-btn')
-            .addEventListener('click', randomizeCombo);
-
-    // auto-run once on load
-    window.addEventListener('DOMContentLoaded', randomizeCombo);
+    document.addEventListener('DOMContentLoaded', ()=>{
+      spawnBackground();
+      randomizeCombo();
+      document.getElementById('randomize-btn').onclick = randomizeCombo;
+    });
   </script>
 </body>
 </html>

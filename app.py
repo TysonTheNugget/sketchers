@@ -4,14 +4,14 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 # ─── CONFIG ─────────────────────────────────────────────────────
-IMAGE_SIZE   = (790, 875)
-STATIC_PATH  = 'static'
-LAYER_ORDER  = ['background', 'bodies', 'eyes', 'mouth', 'shirts', 'hairs', 'toys']
+IMAGE_SIZE  = (790, 875)
+STATIC_PATH = 'static'
+LAYER_ORDER = ['background', 'bodies', 'eyes', 'mouth', 'shirts', 'hairs', 'toys']
 # ─────────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
-    # Build a dict: layer name → list of filenames in static/<layer>/
+    # gather PNGs per layer
     layer_files = {}
     for layer in LAYER_ORDER:
         folder = os.path.join(STATIC_PATH, layer)
