@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Placement</title>
+  <link rel="stylesheet" href="/static/xp.css">
+  <style>
+    #canvasContainer {
+      position: relative;
+      width: 100%;
+      max-width: 90vw;
+      aspect-ratio: 604/729;
+      border: 2px inset #000080;
+      margin: 10px auto;
+    }
+    canvas {
+      position: absolute; top:0; left:0;
+      width:100%; height:100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="window">
+    <div class="title-bar"><div class="title">Drag to Position</div></div>
+    <div class="window-body">
+      <div id="canvasContainer">
+        <canvas id="baseCanvas"></canvas>
+        <canvas id="overlayCanvas"></canvas>
+      </div>
+      <button onclick="saveImage()">Save Placement</button>
+    </div>
+  </div>
+
+  <script>
+    const BASE_W=604, BASE_H=729;
+    const baseC=document.getElementById('baseCanvas'), ovC=document.getElementById('overlayCanvas');
+    const bctx=baseC.getContext('2d'), octx=ovC.getContext('2d');
+    // set actual pixel size
+    baseC.width=ovC.width=BASE_W;
+    baseC.height=ovC.height=BASE_H;
+
+    const bg=new Image();
+    bg.src='/static/bodies/bodies1.png';
+    bg.onload=()=>bctx.drawImage(bg,0,0,BASE_W,BASE_H);
+
+    const up=new Image();
+    up.src='/static/temp_upload.png';
+    let imgW=200, imgH=200, imgX=0, imgY=0;
+    up.onload=()=>octx.drawImage(up,imgX,imgY,imgW,imgH);
+
+    let drag=false, offX, offY;
+    ovC.addEventListener('mousedown',e=>{
+      drag=true; offX=e.offsetX-imgX; offY=e.offsetY-imgY;
+    });
+    ovC.addEventListener('mousemove',e=>{
+      if(drag){
+        imgX=e.offsetX-offX; imgY=e.offsetY-offY;
+        octx.clearRect(0,0,BASE_W,BASE_H);
+        octx.drawImage(up,imgX,imgY,imgW,imgH);
+      }
+    });
+    ovC.addEventListener('mouseup',_=>drag=false);
+
+    function saveImage(){
+      const tmp=document.createElement('canvas');
+      tmp.width=BASE_W; tmp.height=BASE_H;
+      const tctx=tmp.getContext('2d');
+      tctx.drawImage(up,imgX,imgY,imgW,imgH);
+      const data=tmp.toDataURL('image/png');
+      fetch('/save_image',{
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:`folder={{ folder }}&imageData=${encodeURIComponent(data)}`
+      })
+      .then(r=>r.text()).then(alert);
+    }
+  </script>
+</body>
+</html>

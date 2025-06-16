@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wishy Washy Combo Generator</title>
+  <link rel="stylesheet" href="/static/xp.css">
+</head>
+<body>
+  <div class="window">
+    <div class="title-bar">
+      <div class="title">Wishy Washy Combo Generator</div>
+    </div>
+    <div class="window-body">
+      <h1>Generate Random Combo</h1>
+      <button onclick="generateImage()">Generate New</button>
+      <div style="margin:10px 0;">
+        <img id="combo" src="/generate" style="max-width:90vw; height:auto;">
+      </div>
+
+      <hr>
+
+      <h2>Hide a Trait (public)</h2>
+      <form action="/hide_trait" method="POST">
+        <label>Layer:
+          <select name="layer">
+            {% for f in folders %}
+              <option value="{{ f }}">{{ f }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Filename:
+          <input type="text" name="filename" placeholder="e.g. bodies3.png" required>
+        </label>
+        <label>Password:
+          <input type="password" name="password" required>
+        </label>
+        <button type="submit">Hide</button>
+      </form>
+
+      <p><a href="/unlock">🔒 Master Password Unlock</a></p>
+
+      <hr>
+
+      <h2>Upload Your Own Image</h2>
+      {% with msgs = get_flashed_messages() %}
+        {% if msgs %}
+          <ul class="errors">
+            {% for m in msgs %}<li>{{ m }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+      <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label>
+          Select Folder:
+          <select name="folder" required>
+            {% for f in folders %}
+              <option value="{{ f }}">{{ f }}</option>
+            {% endfor %}
+          </select>
+        </label><br><br>
+        <input type="file" name="file" accept=".png" required><br><br>
+        <button type="submit">Upload</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function generateImage() {
+      document.getElementById('combo').src = '/generate?' + Date.now();
+    }
+  </script>
+</body>
+</html>
