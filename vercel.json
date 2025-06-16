@@ -4,13 +4,21 @@
     {
       "src": "app.py",
       "use": "@vercel/python",
-      "config": {
-        "includeFiles": ["static/**", "templates/**"]
-      }
+      "config": { "includeFiles": ["static/**", "templates/**"] }
     }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/(.*)",        "dest": "app.py" }
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/static/favicon.ico"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
   ]
 }
