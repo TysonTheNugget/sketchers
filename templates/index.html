@@ -6,8 +6,70 @@
   <title>Mymillios</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/xp.css">
+
+  <!-- popup & audio‐controls styling -->
+  <style>
+    /* ENTRY POPUP */
+    #entry-popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #entry-popup .popup-modal {
+      background: #C0C0C0;
+      border: 4px solid #000080;
+      padding: 2rem;
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      color: #000;
+    }
+    #entry-popup h2 {
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
+    }
+    #entry-popup button {
+      margin: 0 .5rem;
+      padding: .5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 2px solid #000;
+      background: #FFF;
+      border-radius: 8px;
+    }
+
+    /* AUDIO CONTROLS */
+    #audio-controls {
+      position: fixed;
+      bottom: 1rem; right: 1rem;
+      display: none;
+      gap: .5rem;
+      z-index: 999;
+    }
+    #audio-controls button {
+      font-size: 2rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: .2rem;
+    }
+  </style>
 </head>
 <body>
+  <!-- Entry Popup -->
+  <div id="entry-popup">
+    <div class="popup-modal">
+      <h2>Enter Sketch Wrld?</h2>
+      <button id="enter-yes">Yes</button>
+      <button id="enter-no">No</button>
+    </div>
+  </div>
+
+  <!-- Your existing content -->
   <div id="background-container"></div>
   <div class="main-container">
     <h1 id="site-title">My<span>m</span>illios</h1>
@@ -27,6 +89,15 @@
     </div>
   </div>
 
+  <!-- Audio Controls -->
+  <div id="audio-controls">
+    <button id="play-btn">▶️</button>
+    <button id="stop-btn">⏹️</button>
+    <button id="mute-btn">🔇</button>
+    <button id="vol-down-btn">🔉</button>
+    <button id="vol-up-btn">🔊</button>
+  </div>
+
   <script>
     const layerFiles = {{ layer_files | tojson }};
     const layers     = {{ layers | tojson }};
@@ -35,38 +106,38 @@
     function spawnBackground() {
       const bg = document.getElementById('background-container');
       const count = 20;
-      for(let i=0; i<count; i++){
-        const layer = layers[Math.floor(Math.random()*layers.length)];
-        const opts = layerFiles[layer];
-        if(!opts || !opts.length) continue;
-        const pick = opts[Math.floor(Math.random()*opts.length)];
-        const img = document.createElement('img');
-        img.src = `/static/${layer}/${pick}`;
+      for (let i = 0; i < count; i++) {
+        const layer = layers[Math.floor(Math.random() * layers.length)];
+        const opts  = layerFiles[layer] || [];
+        if (!opts.length) continue;
+        const pick = opts[Math.floor(Math.random() * opts.length)];
+        const img  = document.createElement('img');
+        img.src    = `/static/${layer}/${pick}`;
         img.className = 'bg-float';
-        img.style.top  = Math.random()*100 + '%';
-        img.style.left = Math.random()*100 + '%';
-        img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random()*0.2}) rotate(${Math.random()*360}deg)`;
+        img.style.top    = Math.random() * 100 + '%';
+        img.style.left   = Math.random() * 100 + '%';
+        img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random() * 0.2}) rotate(${Math.random() * 360}deg)`;
         bg.appendChild(img);
       }
     }
 
     // Randomize combo images
-    function randomizeCombo(){
-      layers.forEach(layer=>{
-        const opts = layerFiles[layer]||[];
-        if(!opts.length) return;
-        const pick = opts[Math.floor(Math.random()*opts.length)];
+    function randomizeCombo() {
+      layers.forEach(layer => {
+        const opts = layerFiles[layer] || [];
+        if (!opts.length) return;
+        const pick = opts[Math.floor(Math.random() * opts.length)];
         document.getElementById(`layer-${layer}`).src = `/static/${layer}/${pick}`;
       });
     }
 
     // Download each layer image separately
-    function downloadLayers(){
-      layers.forEach(layer=>{
+    function downloadLayers() {
+      layers.forEach(layer => {
         const imgEl = document.getElementById(`layer-${layer}`);
-        const url = imgEl.src;
-        const link = document.createElement('a');
-        link.href = url;
+        const url   = imgEl.src;
+        const link  = document.createElement('a');
+        link.href   = url;
         link.download = url.split('/').pop();
         document.body.appendChild(link);
         link.click();
@@ -74,11 +145,37 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', ()=>{
+    document.addEventListener('DOMContentLoaded', () => {
+      // your existing init
       spawnBackground();
       randomizeCombo();
       document.getElementById('randomize-btn').onclick = randomizeCombo;
       document.getElementById('download-btn').onclick   = downloadLayers;
+
+      // audio & popup logic
+      const popup    = document.getElementById('entry-popup');
+      const controls = document.getElementById('audio-controls');
+
+      const audio = new Audio('/static/song.mp3');
+      audio.loop   = true;
+      audio.volume = 0.5;
+
+      document.getElementById('enter-yes').onclick = () => {
+        popup.style.display = 'none';
+        controls.style.display = 'flex';
+        audio.play();
+      };
+      document.getElementById('enter-no').onclick = () => {
+        popup.style.display = 'none';
+        controls.style.display = 'flex';
+      };
+
+      // controls
+      document.getElementById('play-btn').onclick    = () => audio.play();
+      document.getElementById('stop-btn').onclick    = () => { audio.pause(); audio.currentTime = 0; };
+      document.getElementById('mute-btn').onclick    = () => audio.muted = !audio.muted;
+      document.getElementById('vol-down-btn').onclick = () => audio.volume = Math.max(0, audio.volume - 0.1);
+      document.getElementById('vol-up-btn').onclick   = () => audio.volume = Math.min(1, audio.volume + 0.1);
     });
   </script>
 </body>
