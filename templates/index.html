@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wishy Washy Combo Generator</title>
+  <title>Random Combo</title>
   <link rel="stylesheet" href="/static/xp.css">
   <style>
-    /* ensure the container matches your IMAGE_SIZE */
     #combo-container {
       position: relative;
       width: {{ img_width }}px;
       height: {{ img_height }}px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     #combo-container img {
       position: absolute;
@@ -23,39 +22,22 @@
   </style>
 </head>
 <body>
-  <div class="window">
-    <div class="title-bar">
-      <div class="title">Wishy Washy Combo Generator</div>
-    </div>
-    <div class="window-body">
-
-      <h1>Randomize Your Combo</h1>
-      <div id="combo-container">
-        {% for layer in layers %}
-          <img id="layer-{{layer}}" src="" style="z-index:{{loop.index}}">
-        {% endfor %}
-      </div>
-      <button id="randomize-btn">Randomize!</button>
-
-      <hr>
-      <!-- your Hide & Unlock forms here, unchanged -->
-
-      <hr>
-      <!-- your Upload form here, unchanged -->
-
-    </div>
+  <button id="randomize-btn">Randomize!</button>
+  <div id="combo-container">
+    {% for layer in layers %}
+      <img id="layer-{{layer}}" src="" style="z-index:{{loop.index}}">
+    {% endfor %}
   </div>
 
   <script>
-    // layer_files is a dict: { layerName: [ "file1.png", "file2.png", ... ], ... }
     const layerFiles = {{ layer_files | tojson }};
     const layers     = {{ layers | tojson }};
 
     function randomizeCombo(){
-      layers.forEach((layerName, idx)=>{
-        const options = layerFiles[layerName];
-        if(!options || options.length===0) return;
-        const choice = options[Math.floor(Math.random()*options.length)];
+      layers.forEach(layerName=>{
+        const opts = layerFiles[layerName]||[];
+        if(!opts.length) return;
+        const choice = opts[Math.floor(Math.random()*opts.length)];
         document.getElementById(`layer-${layerName}`)
                 .src = `/static/${layerName}/${choice}`;
       });
@@ -64,7 +46,7 @@
     document.getElementById('randomize-btn')
             .addEventListener('click', randomizeCombo);
 
-    // auto-run on load
+    // auto-run once on load
     window.addEventListener('DOMContentLoaded', randomizeCombo);
   </script>
 </body>
