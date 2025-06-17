@@ -6,12 +6,12 @@ app = Flask(__name__)
 # ─── CONFIG ─────────────────────────────────────────────────────
 IMAGE_SIZE  = (790, 875)
 STATIC_PATH = 'static'
-LAYER_ORDER = ['background', 'bodies', 'eyes', 'mouth', 'shirts', 'hairs', 'toys']
+LAYER_ORDER = ['background', 'bodies', 'eyes', 'mouth', 'shirts', 'hairs', 'toys', 'accessories']
 # ─────────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
-    # gather PNGs per layer
+    # gather PNGs per layer, including accessories
     layer_files = {}
     for layer in LAYER_ORDER:
         folder = os.path.join(STATIC_PATH, layer)
@@ -30,7 +30,7 @@ def index():
 # serve static files
 @app.route('/static/<path:path>')
 def static_proxy(path):
-    return send_from_directory('static', path)
+    return send_from_directory(STATIC_PATH, path)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
