@@ -6,84 +6,56 @@
   <title>Mymillios</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/xp.css">
+
+  <!-- popup & audio‐controls styling -->
   <style>
     /* ENTRY POPUP */
     #entry-popup {
-      position: fixed; top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.8);
-      display:flex; align-items:center; justify-content:center;
-      z-index:1000;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
     }
     #entry-popup .popup-modal {
-      background:#C0C0C0; border:4px solid #000080;
-      padding:2rem; text-align:center;
-      font-family:'Press Start 2P'; color:#000;
+      background: #C0C0C0;
+      border: 4px solid #000080;
+      padding: 2rem;
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      color: #000;
+    }
+    #entry-popup h2 {
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
     }
     #entry-popup button {
-      margin:0 .5rem; padding:.5rem 1rem;
-      font-size:1rem; cursor:pointer;
-      border:2px solid #000; background:#FFF;
-      border-radius:8px;
+      margin: 0 .5rem;
+      padding: .5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 2px solid #000;
+      background: #FFF;
+      border-radius: 8px;
     }
 
-    /* COMBO CONTAINER */
-    #combo-container {
-      position: relative;
-      width: 790px;
-      height: 875px;
-      margin: 1rem auto;
-      overflow: hidden;
+    /* AUDIO CONTROLS */
+    #audio-controls {
+      position: fixed;
+      bottom: 1rem; right: 1rem;
+      display: none;
+      gap: .5rem;
+      z-index: 999;
     }
-    #combo-container img {
-      position: absolute;
-      top: 0; left: 0;
-      width: 790px; height: 875px;
-      image-rendering: crisp-edges;
-    }
-
-    /* FILTERS */
-    #filter-select {
-      display: block;
-      margin: .5rem auto 1rem;
-      font-family:'Press Start 2P';
-    }
-    /* Heavy CRT effect */
-    #combo-container.filter-crt-heavy img {
-      filter: contrast(200%) brightness(75%) saturate(150%);
-    }
-    #combo-container.filter-crt-heavy::after {
-      content: '';
-      position: absolute; top:0; left:0;
-      width:100%; height:100%;
-      pointer-events: none;
-      background-image:
-        repeating-linear-gradient(rgba(0,0,0,0.15) 0 2px, transparent 2px 4px),
-        radial-gradient(circle at center, rgba(255,255,255,0.05), transparent 70%);
-      mix-blend-mode: overlay;
-    }
-    /* Simple scanlines */
-    #combo-container.filter-scanlines::after {
-      content: '';
-      position: absolute; top:0; left:0;
-      width:100%; height:100%;
-      pointer-events: none;
-      background-image:
-        repeating-linear-gradient(rgba(0,0,0,0.1) 0 1px, transparent 1px 3px);
-    }
-
-    /* BUTTONS */
-    .buttons {
-      text-align:center; margin-bottom:1.5rem;
-    }
-    .buttons button {
-      font-family:'Press Start 2P';
-      padding:.5rem 1rem; margin:0 .5rem;
-    }
-
-    /* FLOATS */
-    .bg-float {
-      position:absolute; pointer-events:none; opacity:.5;
+    #audio-controls button {
+      font-size: 2rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: .2rem;
     }
   </style>
 </head>
@@ -97,14 +69,10 @@
     </div>
   </div>
 
-  <!-- Floating Background -->
+  <!-- Your existing content -->
   <div id="background-container"></div>
-
-  <!-- Main Generator -->
   <div class="main-container">
-    <h1 style="text-align:center; font-family:'Press Start 2P';">
-      My<span style="color:#f00;">m</span>illios
-    </h1>
+    <h1 id="site-title">My<span>m</span>illios</h1>
     <div class="window">
       <div class="title-bar">mymillio generatoor</div>
       <div class="window-body">
@@ -113,11 +81,6 @@
             <img id="layer-{{layer}}" src="" alt="" />
           {% endfor %}
         </div>
-        <select id="filter-select">
-          <option value="">No filter</option>
-          <option value="crt-heavy">Heavy CRT</option>
-          <option value="scanlines">Scanlines</option>
-        </select>
         <div class="buttons">
           <button id="randomize-btn">Randomize!</button>
           <button id="download-btn">Download Layers</button>
@@ -126,76 +89,93 @@
     </div>
   </div>
 
-  <!-- Audio & Popup Logic -->
-  <script>
-    const layers     = {{ layers|tojson }};
-    const layerFiles = {{ layer_files|tojson }};
+  <!-- Audio Controls -->
+  <div id="audio-controls">
+    <button id="play-btn">▶️</button>
+    <button id="stop-btn">⏹️</button>
+    <button id="mute-btn">🔇</button>
+    <button id="vol-down-btn">🔉</button>
+    <button id="vol-up-btn">🔊</button>
+  </div>
 
-    // spawn background floats
+  <script>
+    const layerFiles = {{ layer_files | tojson }};
+    const layers     = {{ layers | tojson }};
+
+    // Floating background
     function spawnBackground() {
       const bg = document.getElementById('background-container');
-      bg.innerHTML = '';
-      layers.forEach(layer => {
-        const el = document.getElementById(`layer-${layer}`);
-        if (!el.src) return;
-        const f = el.cloneNode();
-        f.className = 'bg-float';
-        f.style.top = Math.random()*100 + '%';
-        f.style.left = Math.random()*100 + '%';
-        f.style.transform = `translate(-50%,-50%) scale(${0.1+Math.random()*0.2}) rotate(${Math.random()*360}deg)`;
-        bg.appendChild(f);
-      });
+      const count = 20;
+      for (let i = 0; i < count; i++) {
+        const layer = layers[Math.floor(Math.random() * layers.length)];
+        const opts  = layerFiles[layer] || [];
+        if (!opts.length) continue;
+        const pick = opts[Math.floor(Math.random() * opts.length)];
+        const img  = document.createElement('img');
+        img.src    = `/static/${layer}/${pick}`;
+        img.className = 'bg-float';
+        img.style.top    = Math.random() * 100 + '%';
+        img.style.left   = Math.random() * 100 + '%';
+        img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random() * 0.2}) rotate(${Math.random() * 360}deg)`;
+        bg.appendChild(img);
+      }
     }
 
-    // randomize layers
-    function randomize() {
+    // Randomize combo images
+    function randomizeCombo() {
       layers.forEach(layer => {
         const opts = layerFiles[layer] || [];
         if (!opts.length) return;
-        const pick = opts[Math.floor(Math.random()*opts.length)];
+        const pick = opts[Math.floor(Math.random() * opts.length)];
         document.getElementById(`layer-${layer}`).src = `/static/${layer}/${pick}`;
       });
-      spawnBackground();
     }
 
-    // download each layer
+    // Download each layer image separately
     function downloadLayers() {
       layers.forEach(layer => {
-        const el = document.getElementById(`layer-${layer}`);
-        if (!el.src) return;
-        const a = document.createElement('a');
-        a.href = el.src;
-        a.download = el.src.split('/').pop();
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const imgEl = document.getElementById(`layer-${layer}`);
+        const url   = imgEl.src;
+        const link  = document.createElement('a');
+        link.href   = url;
+        link.download = url.split('/').pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      const popup = document.getElementById('entry-popup');
-      const audio = new Audio('/static/song1.mp3');
-      audio.loop = true;
+      // your existing init
+      spawnBackground();
+      randomizeCombo();
+      document.getElementById('randomize-btn').onclick = randomizeCombo;
+      document.getElementById('download-btn').onclick   = downloadLayers;
+
+      // audio & popup logic
+      const popup    = document.getElementById('entry-popup');
+      const controls = document.getElementById('audio-controls');
+
+      const audio = new Audio('/static/song.mp3');
+      audio.loop   = true;
       audio.volume = 0.5;
 
       document.getElementById('enter-yes').onclick = () => {
         popup.style.display = 'none';
+        controls.style.display = 'flex';
         audio.play();
       };
       document.getElementById('enter-no').onclick = () => {
         popup.style.display = 'none';
+        controls.style.display = 'flex';
       };
 
-      document.getElementById('randomize-btn').onclick = randomize;
-      document.getElementById('download-btn').onclick = downloadLayers;
-
-      document.getElementById('filter-select').onchange = e => {
-        const combo = document.getElementById('combo-container');
-        combo.className = e.target.value ? `filter-${e.target.value}` : '';
-      };
-
-      // initial
-      randomize();
+      // controls
+      document.getElementById('play-btn').onclick    = () => audio.play();
+      document.getElementById('stop-btn').onclick    = () => { audio.pause(); audio.currentTime = 0; };
+      document.getElementById('mute-btn').onclick    = () => audio.muted = !audio.muted;
+      document.getElementById('vol-down-btn').onclick = () => audio.volume = Math.max(0, audio.volume - 0.1);
+      document.getElementById('vol-up-btn').onclick   = () => audio.volume = Math.min(1, audio.volume + 0.1);
     });
   </script>
 </body>
