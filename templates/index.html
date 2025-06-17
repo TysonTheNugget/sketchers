@@ -2,78 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mymillios</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/xp.css">
   <style>
     /* ENTRY POPUP */
     #entry-popup {
-      position: fixed; top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.8);
-      display:flex; align-items:center; justify-content:center;
-      z-index:1000;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
     }
     #entry-popup .popup-modal {
-      background:#C0C0C0;
-      border:4px solid #000080;
-      padding:2rem;
-      text-align:center;
-      font-family:'Press Start 2P',monospace;
-      color:#000;
+      background: #C0C0C0;
+      border: 4px solid #000080;
+      padding: 2rem;
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      color: #000;
+    }
+    #entry-popup h2 {
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
     }
     #entry-popup button {
-      margin:0 .5rem;
-      padding:.5rem 1rem;
-      font-size:1rem;
-      border:2px solid #000;
-      background:#fff;
-      border-radius:8px;
-      cursor:pointer;
+      margin: 0 .5rem;
+      padding: .5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 2px solid #000;
+      background: #FFF;
+      border-radius: 8px;
     }
 
-    /* FLOATING CHARACTERS */
-    #background-container {
-      position:fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      pointer-events:none;
-      overflow:hidden;
-      z-index:0;
+    /* AUDIO CONTROLS */
+    #audio-controls {
+      position: fixed;
+      bottom: 1rem; right: 1rem;
+      display: none;
+      gap: .5rem;
+      z-index: 999;
     }
-    .float-char {
-      position:absolute;
-      width:80px;
-      opacity:0.5;
-      animation-name: drift;
-      animation-timing-function: linear;
-      animation-iteration-count: infinite;
-    }
-    @keyframes drift {
-      from { transform: translateX(0); }
-      to   { transform: translateX(110vw); }
+    #audio-controls button {
+      font-size: 2rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: .2rem;
     }
 
-    /* MAIN CONTENT (above floats) */
-    .main-container {
-      position:relative;
-      z-index:1;
-      text-align:center;
-      padding-top:2rem;
+    /* BACKGROUND FLOATS */
+    .bg-float {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.5;
     }
-    .window { margin:auto; width:90%; max-width:500px; }
-    .window-body { padding:1rem; }
-    #combo-container img { max-width:100%; }
 
-    /* AUDIO CONTROLS & PLAYLIST are unchanged… */
-    /* …copy your previous styles here… */
+    /* PLAYLIST */
+    #playlist-container {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.75rem;
+      margin: 1rem auto;
+      text-align: center;
+    }
+    #playlist-title {
+      cursor: default;
+    }
+    #playlist {
+      list-style: none;
+      padding: 0.5rem;
+      margin: 0.5rem 0 0;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    #playlist li {
+      cursor: pointer;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <!-- Floating chars -->
-  <div id="background-container"></div>
-
   <!-- Entry Popup -->
   <div id="entry-popup">
     <div class="popup-modal">
@@ -83,15 +97,18 @@
     </div>
   </div>
 
+  <!-- Floating Background -->
+  <div id="background-container"></div>
+
+  <!-- Main Content -->
   <div class="main-container">
     <h1 id="site-title">My<span>m</span>illios</h1>
-
     <div class="window">
       <div class="title-bar">mymillio generatoor</div>
       <div class="window-body">
         <div id="combo-container">
           {% for layer in layers %}
-            <img id="layer-{{layer}}" src="" alt="" />
+          <img id="layer-{{layer}}" src="" alt="" />
           {% endfor %}
         </div>
         <div class="buttons">
@@ -101,103 +118,113 @@
       </div>
     </div>
 
-    <!-- Playlist & Audio Controls… -->
-    <!-- copy your #playlist-container and #audio-controls markup here -->
+    <!-- Playlist -->
+    <div id="playlist-container">
+      <div id="playlist-title">Sketchymillio EP1</div>
+      <ul id="playlist">
+        <li data-src="/static/song1.mp3">Song1</li>
+        <li data-src="/static/song2.mp3">Song2</li>
+        <li data-src="/static/song3.mp3">Song3</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Audio Controls -->
+  <div id="audio-controls">
+    <button id="play-btn">▶️</button>
+    <button id="stop-btn">⏹️</button>
+    <button id="mute-btn">🔇</button>
+    <button id="vol-down-btn">🔉</button>
+    <button id="vol-up-btn">🔊</button>
   </div>
 
   <script>
-    const layerFiles = {{ layer_files|tojson }};
-    const layers     = {{ layers|tojson }};
+    const layerFiles = {{ layer_files | tojson }};
+    const layers     = {{ layers | tojson }};
 
-    // 1) Build 10 floating characters on load (only once)
-    function generateBackgroundFloats() {
-      const container = document.getElementById('background-container');
-      for (let i = 0; i < 10; i++) {
-        // pick one random combo
-        const picks = layers.map(layer => {
-          const opts = layerFiles[layer];
-          return opts[ Math.floor(Math.random()*opts.length) ];
-        });
-
-        // draw & noise on a temp canvas
-        const canvas = document.createElement('canvas');
-        const img0 = new Image();
-        img0.crossOrigin = 'anonymous';
-        img0.onload = () => {
-          // assume all source layers same size
-          const w = img0.width, h = img0.height;
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-
-          // draw each layer in order
-          picks.forEach((file, idx) => {
-            const img = new Image();
-            img.crossOrigin='anonymous';
-            img.src = `/static/${layers[idx]}/${file}`;
-            ctx.drawImage(img,0,0);
-          });
-
-          // add 50% noise
-          const id = ctx.getImageData(0,0,w,h), d = id.data;
-          for (let j=0; j<d.length; j+=4) {
-            const noise = (Math.random()-0.5)*255*0.5;
-            d[j]   = d[j]   + noise;
-            d[j+1] = d[j+1] + noise;
-            d[j+2] = d[j+2] + noise;
-          }
-          ctx.putImageData(id,0,0);
-
-          // create float <img>
-          const fc = document.createElement('img');
-          fc.className = 'float-char';
-          fc.src = canvas.toDataURL();
-          // random vertical start
-          fc.style.top = Math.random()*90 + 'vh';
-          fc.style.left = '-10vw';
-          // random speed between 25–45s
-          fc.style.animationDuration = (25 + Math.random()*20) + 's';
-          // random delay up to 30s
-          fc.style.animationDelay = (Math.random()*30) + 's';
-          container.appendChild(fc);
-        };
-        // trigger load
-        img0.src = `/static/${layers[0]}/${picks[0]}`;
-      }
-    }
-
-    // 2) Randomize only the central combo (no floats)
-    function randomizeCombo() {
+    // spawnBackground: clones each final noisy <img> into a floating background
+    function spawnBackground() {
+      const bg = document.getElementById('background-container');
       layers.forEach(layer => {
-        const opts = layerFiles[layer];
-        if (!opts || !opts.length) return;
-        const pick = opts[ Math.floor(Math.random()*opts.length) ];
-        document.getElementById(`layer-${layer}`).src =
-          `/static/${layer}/${pick}`;
+        const imgSrc = document.getElementById(`layer-${layer}`).src;
+        if (!imgSrc) return;
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.className = 'bg-float';
+        img.style.top = Math.random() * 100 + '%';
+        img.style.left = Math.random() * 100 + '%';
+        img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random() * 0.2}) rotate(${Math.random() * 360}deg)`;
+        bg.appendChild(img);
       });
     }
 
-    // 3) Download layers unchanged
+    // randomizeCombo: pick new layer images, rasterize + add 50% noise, then show and float
+    function randomizeCombo() {
+      const bgContainer = document.getElementById('background-container');
+      bgContainer.innerHTML = '';
+
+      // only layers with available files
+      const validLayers = layers.filter(l => (layerFiles[l] || []).length);
+      let loadedCount = 0;
+
+      validLayers.forEach(layer => {
+        const opts = layerFiles[layer];
+        const pick = opts[Math.floor(Math.random() * opts.length)];
+        const imgEl = document.getElementById(`layer-${layer}`);
+
+        // load into temp image, then draw to canvas + noise
+        const temp = new Image();
+        temp.crossOrigin = 'anonymous';
+        temp.onload = () => {
+          const w = temp.width, h = temp.height;
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(temp, 0, 0);
+          // pixel noise
+          const id = ctx.getImageData(0, 0, w, h);
+          const d = id.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const noise = (Math.random() - 0.5) * 255 * 0.5; // ±50% intensity
+            d[i]   = d[i]   + noise; // R
+            d[i+1] = d[i+1] + noise; // G
+            d[i+2] = d[i+2] + noise; // B
+          }
+          ctx.putImageData(id, 0, 0);
+          // update visible <img>
+          imgEl.src = canvas.toDataURL();
+
+          // once all layers done, spawn floats
+          loadedCount++;
+          if (loadedCount === validLayers.length) {
+            spawnBackground();
+          }
+        };
+        temp.src = `/static/${layer}/${pick}`;
+      });
+    }
+
+    // Download each layer separately
     function downloadLayers() {
       layers.forEach(layer => {
         const url = document.getElementById(`layer-${layer}`).src;
         if (!url) return;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = url.split('/').pop();
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = url.split('/').pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      generateBackgroundFloats();
+      const audio = new Audio('/static/song1.mp3');
+      audio.loop = true;
+      audio.volume = 0.5;
 
       const popup    = document.getElementById('entry-popup');
       const controls = document.getElementById('audio-controls');
-      const audio    = new Audio('/static/song1.mp3');
-      audio.loop     = true;
-      audio.volume   = 0.5;
 
       document.getElementById('enter-yes').onclick = () => {
         popup.style.display    = 'none';
@@ -212,9 +239,23 @@
       };
 
       document.getElementById('randomize-btn').onclick = randomizeCombo;
-      document.getElementById('download-btn').onclick = downloadLayers;
+      document.getElementById('download-btn').onclick   = downloadLayers;
 
-      // …and wire up play/stop/mute/vol & playlist exactly as before…
+      // Audio controls
+      document.getElementById('play-btn').onclick     = () => audio.play();
+      document.getElementById('stop-btn').onclick     = () => { audio.pause(); audio.currentTime = 0; };
+      document.getElementById('mute-btn').onclick     = () => audio.muted = !audio.muted;
+      document.getElementById('vol-down-btn').onclick = () => audio.volume = Math.max(0, audio.volume - 0.1);
+      document.getElementById('vol-up-btn').onclick   = () => audio.volume = Math.min(1, audio.volume + 0.1);
+
+      // Playlist switching
+      document.querySelectorAll('#playlist li').forEach(li => {
+        li.onclick = () => {
+          audio.pause();
+          audio.src = li.dataset.src;
+          audio.play();
+        };
+      });
     });
   </script>
 </body>
