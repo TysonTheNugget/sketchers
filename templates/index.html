@@ -146,14 +146,14 @@
         function spawnBackground() {
             const bg = document.getElementById('background-container');
             layers.forEach(layer => {
-                const imgSrc = document.getElementById(layer-${layer}).src;
+                const imgSrc = document.getElementById(`layer-${layer}`).src;
                 if (!imgSrc) return;
                 const img = document.createElement('img');
                 img.src = imgSrc;
                 img.className = 'bg-float';
                 img.style.top = Math.random() * 100 + '%';
                 img.style.left = Math.random() * 100 + '%';
-                img.style.transform = translate(-50%,-50%) scale(${0.1 + Math.random() * 0.2}) rotate(${Math.random() * 360}deg);
+                img.style.transform = `translate(-50%,-50%) scale(${0.1 + Math.random() * 0.2}) rotate(${Math.random() * 360}deg)`;
                 bg.appendChild(img);
             });
         }
@@ -164,7 +164,7 @@
                 const opts = layerFiles[layer] || [];
                 if (!opts.length) return;
                 const pick = opts[Math.floor(Math.random() * opts.length)];
-                document.getElementById(layer-${layer}).src = /static/${layer}/${pick};
+                document.getElementById(`layer-${layer}`).src = `/static/${layer}/${pick}`;
             });
             // Refresh floats after new combo
             document.getElementById('background-container').innerHTML = '';
@@ -174,7 +174,7 @@
         // Download each layer image separately
         function downloadLayers() {
             layers.forEach(layer => {
-                const imgEl = document.getElementById(layer-${layer});
+                const imgEl = document.getElementById(`layer-${layer}`);
                 const url = imgEl.src;
                 if (!url) return;
                 const link = document.createElement('a');
