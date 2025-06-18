@@ -79,27 +79,12 @@
       text-decoration: underline;
     }
 
-    /* SCALE UP ON DESKTOP */
+    /* DESKTOP SCALING */
     @media (min-width: 768px) {
       .window {
         transform: scale(1.25);
         transform-origin: top center;
       }
-    }
-
-    /* —— NEW: make sure your layers overlay properly —— */
-    #combo-container {
-      position: relative;
-      width: 790px;   /* match your IMAGE_SIZE */
-      height: 875px;
-      margin: 1rem auto;
-      background: #eee;
-    }
-    #combo-container img {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
     }
   </style>
 </head>
@@ -121,11 +106,7 @@
       <div class="window-body">
         <div id="combo-container">
           {% for layer in layers %}
-            <img
-              id="layer-{{ layer }}"
-              src=""
-              alt="{{ layer }}"
-              {% if layer == 'health' %}style="opacity:0.3;"{% endif %} />
+          <img id="layer-{{layer}}" src="" alt="" />
           {% endfor %}
         </div>
         <div class="buttons">
@@ -159,79 +140,92 @@
     const layerFiles = {{ layer_files | tojson }};
     const layers     = {{ layers | tojson }};
 
+    // randomizeCombo: pick new layer images, rasterize + add 50% noise
     function randomizeCombo() {
-      const valid = layers.filter(l => (layerFiles[l]||[]).length);
-      valid.forEach(layer => {
+      // only layers with available files
+      const validLayers = layers.filter(l => (layerFiles[l] || []).length);
+      let loadedCount = 0;
+
+      validLayers.forEach(layer => {
         const opts = layerFiles[layer];
-        const pick = opts[Math.floor(Math.random()*opts.length)];
+        const pick = opts[Math.floor(Math.random() * opts.length)];
         const imgEl = document.getElementById(`layer-${layer}`);
+
+        // load into temp image, then draw to canvas + noise
         const temp = new Image();
         temp.crossOrigin = 'anonymous';
         temp.onload = () => {
-          const w=temp.width, h=temp.height;
-          const c=document.createElement('canvas');
-          c.width=w; c.height=h;
-          const ctx=c.getContext('2d');
-          ctx.drawImage(temp,0,0);
-          // only add noise to non-health layers
-          if (layer!=='health') {
-            const id=ctx.getImageData(0,0,w,h);
-            const d=id.data;
-            for (let i=0;i<d.length;i+=4){
-              const n=(Math.random()-0.5)*255*0.5;
-              d[i]+=n; d[i+1]+=n; d[i+2]+=n;
-            }
-            ctx.putImageData(id,0,0);
+          const w = temp.width, h = temp.height;
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(temp, 0, 0);
+          // pixel noise
+          const id = ctx.getImageData(0, 0, w, h);
+          const d = id.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const noise = (Math.random() - 0.5) * 255 * 0.5; // ±50% intensity
+            d[i]   = d[i]   + noise; // R
+            d[i+1] = d[i+1] + noise; // G
+            d[i+2] = d[i+2] + noise; // B
           }
-          imgEl.src = c.toDataURL();
+          ctx.putImageData(id, 0, 0);
+          // update visible <img>
+          imgEl.src = canvas.toDataURL();
+
+          loadedCount++;
         };
         temp.src = `/static/${layer}/${pick}`;
       });
     }
 
+    // Download each layer separately
     function downloadLayers() {
-      layers.forEach(layer=>{
-        const url=document.getElementById(`layer-${layer}`).src;
+      layers.forEach(layer => {
+        const url = document.getElementById(`layer-${layer}`).src;
         if (!url) return;
-        const a=document.createElement('a');
-        a.href=url;
-        a.download=url.split('/').pop();
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = url.split('/').pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       });
     }
 
-    document.addEventListener('DOMContentLoaded',()=>{
+    document.addEventListener('DOMContentLoaded', () => {
       const audio = new Audio('/static/song1.mp3');
-      audio.loop=true; audio.volume=0.5;
+      audio.loop = true;
+      audio.volume = 0.5;
 
       const popup    = document.getElementById('entry-popup');
       const controls = document.getElementById('audio-controls');
 
-      document.getElementById('enter-yes').onclick = ()=>{
-        popup.style.display='none';
-        controls.style.display='flex';
+      document.getElementById('enter-yes').onclick = () => {
+        popup.style.display    = 'none';
+        controls.style.display = 'flex';
         randomizeCombo();
         audio.play();
       };
-      document.getElementById('enter-no').onclick = ()=>{
-        popup.style.display='none';
-        controls.style.display='flex';
+      document.getElementById('enter-no').onclick = () => {
+        popup.style.display    = 'none';
+        controls.style.display = 'flex';
         randomizeCombo();
       };
 
       document.getElementById('randomize-btn').onclick = randomizeCombo;
       document.getElementById('download-btn').onclick   = downloadLayers;
 
-      document.getElementById('play-btn').onclick     = ()=> audio.play();
-      document.getElementById('stop-btn').onclick     = ()=>{ audio.pause(); audio.currentTime=0; };
-      document.getElementById('mute-btn').onclick     = ()=> audio.muted = !audio.muted;
-      document.getElementById('vol-down-btn').onclick = ()=> audio.volume = Math.max(0,audio.volume-0.1);
-      document.getElementById('vol-up-btn').onclick   = ()=> audio.volume = Math.min(1,audio.volume+0.1);
+      // Audio controls
+      document.getElementById('play-btn').onclick     = () => audio.play();
+      document.getElementById('stop-btn').onclick     = () => { audio.pause(); audio.currentTime = 0; };
+      document.getElementById('mute-btn').onclick     = () => audio.muted = !audio.muted;
+      document.getElementById('vol-down-btn').onclick = () => audio.volume = Math.max(0, audio.volume - 0.1);
+      document.getElementById('vol-up-btn').onclick   = () => audio.volume = Math.min(1, audio.volume + 0.1);
 
-      document.querySelectorAll('#playlist li').forEach(li=>{
-        li.onclick = ()=>{
+      // Playlist switching
+      document.querySelectorAll('#playlist li').forEach(li => {
+        li.onclick = () => {
           audio.pause();
           audio.src = li.dataset.src;
           audio.play();
