@@ -164,7 +164,7 @@
           const id = ctx.getImageData(0, 0, w, h);
           const d = id.data;
           for (let i = 0; i < d.length; i += 4) {
-            const noise = (Math.random() - 0.5) * 255 * 0.5; // ±50% intensity
+            const noise = (Math.random() - 0.2) * 255 * 0.2; // ±50% intensity
             d[i]   = d[i]   + noise; // R
             d[i+1] = d[i+1] + noise; // G
             d[i+2] = d[i+2] + noise; // B
