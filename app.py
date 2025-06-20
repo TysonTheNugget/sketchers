@@ -15,6 +15,7 @@ LAYER_ORDER = [
     'mouth',
     'shirts',
     'hairs',
+    'earrings',
     'toys',
     'accessories',
     'health',         # ← overlays everything at 30% opacity
