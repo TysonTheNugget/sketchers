@@ -34,7 +34,7 @@ PREVIEW_SCALE = 0.4  # Smaller preview for compact UI
 STATIC_PATH = os.path.join(os.getcwd(), "static")
 LAYER_ORDER = [
     'background', 'accessories2', 'bodies', 'eyes', 'mouth',
-    'shirts', 'hairs', 'toys', 'accessories', 'health'
+    'shirts', 'hairs', 'earrings', 'toys', 'accessories', 'health'
 ]
 
 class MyMilliosApp:
